@@ -1,10 +1,14 @@
 module CardReuse
   def all_cards_for_user(user)
     return nil unless user
-
-    orders = Spree::Order.where(:user_id => user.id).complete.order(:created_at).joins(:payments).where('spree_payments.source_type' => 'Spree::Creditcard').where('spree_payments.state' => 'completed')
-    payments = orders.map(&:payments).flatten
-
-    payments.map{|payment| payment.source unless payment.source.deleted?}.compact.uniq
+    cc_table = Spree::Creditcard.table_name
+    Spree::Creditcard.
+      joins(:payments => :order).
+      where("#{Spree::Order.table_name}.user_id" => user.id).
+      where("#{Spree::Payment.table_name}.state" => "completed").
+      where(["(#{cc_table}.year > ? OR (#{cc_table}.year = ? AND #{cc_table}.month >= ?))", 
+        Date.today.year, Date.today.year, Date.today.month]).
+      where(:deleted_at => nil).
+      uniq
   end
 end
