@@ -6,7 +6,7 @@ module CardReuse
       joins(:payments => :order).
       where("#{Spree::Order.table_name}.user_id" => user.id).
       where("#{Spree::Order.table_name}.state" => "complete").
-      where(["(#{cc_table}.year > ? OR (#{cc_table}.year = ? AND #{cc_table}.month >= ?))", 
+      where(["(CAST(#{cc_table}.year AS integer) > ? OR (CAST(#{cc_table}.year AS integer) = ? AND CAST(#{cc_table}.month AS integer) >= ?))", 
         Date.today.year, Date.today.year, Date.today.month]).
       where(:deleted_at => nil).
       uniq
